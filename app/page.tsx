@@ -1,6 +1,44 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect } from "react";
 
 export default function Home() {
+  useEffect(() => {
+    const asyncEffect = async () => {
+      const {
+        initialize,
+        automaticallyShowInAppMessages,
+        openSession,
+        getUser,
+      } = await import("@braze/web-sdk");
+
+      initialize("e491231d-c4ae-466d-8f7f-ba8ad308f12a", {
+        enableLogging: true,
+        baseUrl: "sdk.iad-01.braze.com",
+        // Warning: Using the serviceWorkerLocation option limits the scope of push notifications on your site. See
+        // https://js.appboycdn.com/web-sdk/5.4/doc/module-appboy.html#initialize for more details.
+        // If in doubt, omit this option and use the default location of /service-worker.js
+        serviceWorkerLocation: "/service-worker.js",
+        safariWebsitePushId: "web.com.braze.sample-build",
+      });
+      automaticallyShowInAppMessages();
+      openSession();
+      getUser()?.setCustomUserAttribute("visited sample-build", new Date());
+    };
+
+    asyncEffect();
+  }, []);
+
+  const handleRegisterPushClick = async () => {
+    const { requestPushPermission, logCustomEvent, requestImmediateDataFlush } =
+      await import("@braze/web-sdk");
+    requestPushPermission(() => {
+      logCustomEvent("send me push");
+      requestImmediateDataFlush();
+    });
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
@@ -8,6 +46,7 @@ export default function Home() {
           Get started by editing&nbsp;
           <code className="font-mono font-bold">app/page.tsx</code>
         </p>
+        <button onClick={() => handleRegisterPushClick()}>push event</button>
         <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
           <a
             className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
